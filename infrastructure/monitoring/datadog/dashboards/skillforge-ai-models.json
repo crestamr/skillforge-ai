@@ -1,0 +1,359 @@
+{
+  "title": "SkillForge AI - AI Models Performance",
+  "description": "Detailed monitoring of AI models performance, inference times, and resource usage",
+  "widgets": [
+    {
+      "id": 1,
+      "definition": {
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "sum:skillforge.ai.models.loaded{env:production}",
+            "aggregator": "last"
+          }
+        ],
+        "title": "Models Loaded",
+        "title_size": "16",
+        "title_align": "left",
+        "precision": 0
+      },
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 2,
+        "height": 2
+      }
+    },
+    {
+      "id": 2,
+      "definition": {
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "sum:skillforge.ai.inference.requests{env:production}.as_rate()",
+            "aggregator": "avg"
+          }
+        ],
+        "title": "Inferences/sec",
+        "title_size": "16",
+        "title_align": "left",
+        "precision": 2
+      },
+      "layout": {
+        "x": 2,
+        "y": 0,
+        "width": 2,
+        "height": 2
+      }
+    },
+    {
+      "id": 3,
+      "definition": {
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "avg:skillforge.ai.model.gpu_utilization{env:production}",
+            "aggregator": "avg"
+          }
+        ],
+        "title": "GPU Utilization %",
+        "title_size": "16",
+        "title_align": "left",
+        "precision": 1
+      },
+      "layout": {
+        "x": 4,
+        "y": 0,
+        "width": 2,
+        "height": 2
+      }
+    },
+    {
+      "id": 4,
+      "definition": {
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "avg:skillforge.ai.model.memory_usage{env:production}",
+            "aggregator": "avg"
+          }
+        ],
+        "title": "Model Memory (GB)",
+        "title_size": "16",
+        "title_align": "left",
+        "precision": 2
+      },
+      "layout": {
+        "x": 6,
+        "y": 0,
+        "width": 2,
+        "height": 2
+      }
+    },
+    {
+      "id": 5,
+      "definition": {
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:skillforge.ai.model.inference_time{env:production} by {model_name}",
+            "display_type": "line",
+            "style": {
+              "palette": "dog_classic",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "title": "Model Inference Time by Model",
+        "title_size": "16",
+        "title_align": "left",
+        "yaxis": {
+          "scale": "linear",
+          "min": "auto",
+          "max": "auto",
+          "include_zero": true,
+          "label": "milliseconds"
+        }
+      },
+      "layout": {
+        "x": 0,
+        "y": 2,
+        "width": 8,
+        "height": 3
+      }
+    },
+    {
+      "id": 6,
+      "definition": {
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "sum:skillforge.ai.inference.requests{env:production} by {model_name}.as_rate()",
+            "display_type": "bars",
+            "style": {
+              "palette": "dog_classic",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "title": "Inference Requests by Model",
+        "title_size": "16",
+        "title_align": "left",
+        "yaxis": {
+          "scale": "linear",
+          "min": "auto",
+          "max": "auto",
+          "include_zero": true,
+          "label": "requests/sec"
+        }
+      },
+      "layout": {
+        "x": 0,
+        "y": 5,
+        "width": 8,
+        "height": 3
+      }
+    },
+    {
+      "id": 7,
+      "definition": {
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:skillforge.ai.model.accuracy{env:production} by {model_name}",
+            "display_type": "line",
+            "style": {
+              "palette": "green",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "title": "Model Accuracy Over Time",
+        "title_size": "16",
+        "title_align": "left",
+        "yaxis": {
+          "scale": "linear",
+          "min": "0",
+          "max": "1",
+          "include_zero": true,
+          "label": "accuracy"
+        }
+      },
+      "layout": {
+        "x": 0,
+        "y": 8,
+        "width": 4,
+        "height": 3
+      }
+    },
+    {
+      "id": 8,
+      "definition": {
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "sum:skillforge.ai.errors{env:production} by {model_name,error_type}.as_rate()",
+            "display_type": "line",
+            "style": {
+              "palette": "red",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "title": "AI Model Errors by Type",
+        "title_size": "16",
+        "title_align": "left",
+        "yaxis": {
+          "scale": "linear",
+          "min": "auto",
+          "max": "auto",
+          "include_zero": true,
+          "label": "errors/sec"
+        }
+      },
+      "layout": {
+        "x": 4,
+        "y": 8,
+        "width": 4,
+        "height": 3
+      }
+    },
+    {
+      "id": 9,
+      "definition": {
+        "type": "heatmap",
+        "requests": [
+          {
+            "q": "avg:skillforge.ai.model.queue_time{env:production} by {model_name}"
+          }
+        ],
+        "title": "Model Queue Time Heatmap",
+        "title_size": "16",
+        "title_align": "left",
+        "yaxis": {
+          "scale": "linear",
+          "min": "auto",
+          "max": "auto",
+          "include_zero": true
+        }
+      },
+      "layout": {
+        "x": 0,
+        "y": 11,
+        "width": 8,
+        "height": 3
+      }
+    },
+    {
+      "id": 10,
+      "definition": {
+        "type": "toplist",
+        "requests": [
+          {
+            "q": "top(sum:skillforge.ai.skill_extraction.requests{env:production} by {skill_category}, 10, 'sum', 'desc')"
+          }
+        ],
+        "title": "Top Skill Categories Extracted",
+        "title_size": "16",
+        "title_align": "left"
+      },
+      "layout": {
+        "x": 0,
+        "y": 14,
+        "width": 4,
+        "height": 4
+      }
+    },
+    {
+      "id": 11,
+      "definition": {
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:skillforge.ai.model.throughput{env:production} by {model_name}",
+            "display_type": "area",
+            "style": {
+              "palette": "blue",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "title": "Model Throughput (tokens/sec)",
+        "title_size": "16",
+        "title_align": "left",
+        "yaxis": {
+          "scale": "linear",
+          "min": "auto",
+          "max": "auto",
+          "include_zero": true,
+          "label": "tokens/sec"
+        }
+      },
+      "layout": {
+        "x": 4,
+        "y": 14,
+        "width": 4,
+        "height": 4
+      }
+    },
+    {
+      "id": 12,
+      "definition": {
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:skillforge.ai.model.cache_hit_rate{env:production} by {model_name}",
+            "display_type": "line",
+            "style": {
+              "palette": "purple",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "title": "Model Cache Hit Rate",
+        "title_size": "16",
+        "title_align": "left",
+        "yaxis": {
+          "scale": "linear",
+          "min": "0",
+          "max": "1",
+          "include_zero": true,
+          "label": "hit rate"
+        }
+      },
+      "layout": {
+        "x": 0,
+        "y": 18,
+        "width": 8,
+        "height": 3
+      }
+    }
+  ],
+  "template_variables": [
+    {
+      "name": "env",
+      "default": "production",
+      "prefix": "env"
+    },
+    {
+      "name": "model_name",
+      "default": "*",
+      "prefix": "model_name"
+    },
+    {
+      "name": "service",
+      "default": "ai-services",
+      "prefix": "service"
+    }
+  ],
+  "layout_type": "ordered",
+  "is_read_only": false,
+  "notify_list": [],
+  "reflow_type": "fixed"
+}

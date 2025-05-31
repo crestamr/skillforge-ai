@@ -1,0 +1,176 @@
+{
+  "alerts": [
+    {
+      "name": "SkillForge AI - High Error Rate",
+      "type": "metric alert",
+      "query": "avg(last_5m):sum:skillforge.errors{env:production}.as_rate() > 10",
+      "message": "🚨 **High Error Rate Alert** 🚨\n\nThe error rate for SkillForge AI has exceeded 10 errors per second.\n\n**Current Rate**: {{value}} errors/sec\n**Threshold**: 10 errors/sec\n\n**Immediate Actions Required:**\n1. Check application logs for error patterns\n2. Verify database connectivity\n3. Check AI service health\n4. Review recent deployments\n\n**Runbook**: https://docs.skillforge.ai/runbooks/high-error-rate\n\n@slack-alerts @pagerduty-critical",
+      "tags": ["env:production", "service:skillforge-ai", "severity:critical"],
+      "options": {
+        "thresholds": {
+          "critical": 10,
+          "warning": 5
+        },
+        "notify_audit": false,
+        "require_full_window": false,
+        "notify_no_data": true,
+        "renotify_interval": 60,
+        "timeout_h": 0,
+        "include_tags": true,
+        "escalation_message": "🔥 **ESCALATION** 🔥\n\nError rate is still high after 1 hour. Escalating to on-call engineer.\n\n@pagerduty-escalation"
+      }
+    },
+    {
+      "name": "SkillForge AI - High Response Time",
+      "type": "metric alert",
+      "query": "avg(last_10m):avg:skillforge.api.response_time{env:production} > 2000",
+      "message": "⚠️ **High Response Time Alert** ⚠️\n\nAPI response time has exceeded 2 seconds.\n\n**Current Time**: {{value}}ms\n**Threshold**: 2000ms\n\n**Investigation Steps:**\n1. Check database query performance\n2. Verify AI model inference times\n3. Check resource utilization\n4. Review load balancer metrics\n\n**Runbook**: https://docs.skillforge.ai/runbooks/high-response-time\n\n@slack-alerts",
+      "tags": ["env:production", "service:skillforge-ai", "severity:warning"],
+      "options": {
+        "thresholds": {
+          "critical": 5000,
+          "warning": 2000
+        },
+        "notify_audit": false,
+        "require_full_window": true,
+        "notify_no_data": false,
+        "renotify_interval": 30,
+        "timeout_h": 1
+      }
+    },
+    {
+      "name": "SkillForge AI - Service Down",
+      "type": "service check",
+      "query": "\"http.can_connect\".over(\"instance:skillforge-ai\").by(\"*\").last(2).count_by_status()",
+      "message": "🚨 **SERVICE DOWN** 🚨\n\nSkillForge AI service is not responding to health checks.\n\n**Service**: {{host.name}}\n**Check**: HTTP connectivity\n\n**Immediate Actions:**\n1. Check pod status in Kubernetes\n2. Verify load balancer health\n3. Check application logs\n4. Restart service if necessary\n\n**Runbook**: https://docs.skillforge.ai/runbooks/service-down\n\n@slack-alerts @pagerduty-critical",
+      "tags": ["env:production", "service:skillforge-ai", "severity:critical"],
+      "options": {
+        "thresholds": {
+          "critical": 1,
+          "warning": 1
+        },
+        "notify_no_data": true,
+        "no_data_timeframe": 5,
+        "renotify_interval": 0
+      }
+    },
+    {
+      "name": "SkillForge AI - High CPU Usage",
+      "type": "metric alert",
+      "query": "avg(last_15m):avg:system.cpu.user{env:production,service:skillforge-ai} by {host} > 80",
+      "message": "⚠️ **High CPU Usage** ⚠️\n\nCPU usage is above 80% on {{host.name}}.\n\n**Current Usage**: {{value}}%\n**Threshold**: 80%\n\n**Actions:**\n1. Check for resource-intensive processes\n2. Consider scaling up pods\n3. Review AI model performance\n\n@slack-alerts",
+      "tags": ["env:production", "service:skillforge-ai", "severity:warning"],
+      "options": {
+        "thresholds": {
+          "critical": 90,
+          "warning": 80
+        },
+        "notify_audit": false,
+        "require_full_window": true,
+        "notify_no_data": false,
+        "renotify_interval": 60
+      }
+    },
+    {
+      "name": "SkillForge AI - High Memory Usage",
+      "type": "metric alert",
+      "query": "avg(last_15m):avg:system.mem.pct_usable{env:production,service:skillforge-ai} by {host} < 15",
+      "message": "⚠️ **High Memory Usage** ⚠️\n\nMemory usage is above 85% on {{host.name}}.\n\n**Available Memory**: {{value}}%\n**Threshold**: 15% available\n\n**Actions:**\n1. Check for memory leaks\n2. Review AI model memory usage\n3. Consider scaling up pods\n\n@slack-alerts",
+      "tags": ["env:production", "service:skillforge-ai", "severity:warning"],
+      "options": {
+        "thresholds": {
+          "critical": 5,
+          "warning": 15
+        },
+        "notify_audit": false,
+        "require_full_window": true,
+        "notify_no_data": false,
+        "renotify_interval": 60
+      }
+    },
+    {
+      "name": "SkillForge AI - Database Connection Failure",
+      "type": "metric alert",
+      "query": "avg(last_5m):avg:skillforge.database.connections.failed{env:production} > 5",
+      "message": "🚨 **Database Connection Failure** 🚨\n\nDatabase connection failures detected.\n\n**Failed Connections**: {{value}}\n**Threshold**: 5\n\n**Immediate Actions:**\n1. Check database health\n2. Verify connection pool settings\n3. Check network connectivity\n4. Review database logs\n\n**Runbook**: https://docs.skillforge.ai/runbooks/database-issues\n\n@slack-alerts @pagerduty-critical",
+      "tags": ["env:production", "service:skillforge-ai", "severity:critical"],
+      "options": {
+        "thresholds": {
+          "critical": 5,
+          "warning": 2
+        },
+        "notify_audit": false,
+        "require_full_window": false,
+        "notify_no_data": true,
+        "renotify_interval": 30
+      }
+    },
+    {
+      "name": "SkillForge AI - AI Model Inference Timeout",
+      "type": "metric alert",
+      "query": "avg(last_10m):avg:skillforge.ai.model.inference_time{env:production} > 30000",
+      "message": "⚠️ **AI Model Inference Timeout** ⚠️\n\nAI model inference time is exceeding 30 seconds.\n\n**Current Time**: {{value}}ms\n**Threshold**: 30000ms\n\n**Investigation:**\n1. Check model resource usage\n2. Verify GPU availability\n3. Review model queue length\n4. Check for model degradation\n\n**Runbook**: https://docs.skillforge.ai/runbooks/ai-performance\n\n@slack-alerts",
+      "tags": ["env:production", "service:ai-services", "severity:warning"],
+      "options": {
+        "thresholds": {
+          "critical": 60000,
+          "warning": 30000
+        },
+        "notify_audit": false,
+        "require_full_window": true,
+        "notify_no_data": false,
+        "renotify_interval": 45
+      }
+    },
+    {
+      "name": "SkillForge AI - Low Job Match Rate",
+      "type": "metric alert",
+      "query": "avg(last_1h):avg:skillforge.jobs.match_rate{env:production} < 0.3",
+      "message": "⚠️ **Low Job Match Rate** ⚠️\n\nJob matching success rate has dropped below 30%.\n\n**Current Rate**: {{value}}\n**Threshold**: 0.3 (30%)\n\n**Investigation:**\n1. Check job matching algorithm performance\n2. Verify skill extraction accuracy\n3. Review job database quality\n4. Check for data pipeline issues\n\n**Runbook**: https://docs.skillforge.ai/runbooks/job-matching\n\n@slack-alerts",
+      "tags": ["env:production", "service:job-matching", "severity:warning"],
+      "options": {
+        "thresholds": {
+          "critical": 0.1,
+          "warning": 0.3
+        },
+        "notify_audit": false,
+        "require_full_window": true,
+        "notify_no_data": true,
+        "renotify_interval": 120
+      }
+    },
+    {
+      "name": "SkillForge AI - Kubernetes Pod Crash Loop",
+      "type": "metric alert",
+      "query": "change(sum(last_10m),last_5m):avg:kubernetes.containers.restarts{cluster_name:skillforge-ai-cluster} by {pod_name} > 3",
+      "message": "🚨 **Pod Crash Loop Detected** 🚨\n\nPod {{pod_name.name}} is crash looping.\n\n**Restart Count**: {{value}}\n**Threshold**: 3 restarts in 5 minutes\n\n**Immediate Actions:**\n1. Check pod logs: `kubectl logs {{pod_name.name}} -n skillforge-ai`\n2. Describe pod: `kubectl describe pod {{pod_name.name}} -n skillforge-ai`\n3. Check resource limits\n4. Review recent deployments\n\n**Runbook**: https://docs.skillforge.ai/runbooks/pod-crash-loop\n\n@slack-alerts @pagerduty-critical",
+      "tags": ["env:production", "service:kubernetes", "severity:critical"],
+      "options": {
+        "thresholds": {
+          "critical": 3
+        },
+        "notify_audit": false,
+        "require_full_window": false,
+        "notify_no_data": false,
+        "renotify_interval": 15
+      }
+    },
+    {
+      "name": "SkillForge AI - Disk Space Low",
+      "type": "metric alert",
+      "query": "avg(last_15m):avg:system.disk.free{env:production,service:skillforge-ai} by {host,device} < 2147483648",
+      "message": "⚠️ **Low Disk Space** ⚠️\n\nDisk space is running low on {{host.name}} ({{device.name}}).\n\n**Free Space**: {{value}} bytes (~{{value|filesizeformat}})\n**Threshold**: 2GB\n\n**Actions:**\n1. Clean up log files\n2. Remove old AI model caches\n3. Check for large temporary files\n4. Consider increasing disk size\n\n@slack-alerts",
+      "tags": ["env:production", "service:skillforge-ai", "severity:warning"],
+      "options": {
+        "thresholds": {
+          "critical": 1073741824,
+          "warning": 2147483648
+        },
+        "notify_audit": false,
+        "require_full_window": true,
+        "notify_no_data": false,
+        "renotify_interval": 120
+      }
+    }
+  ]
+}

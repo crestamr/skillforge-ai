@@ -1,0 +1,39 @@
+{
+  "user_profile": {
+    "user_id": "user_123",
+    "skills": [
+      {"skill": "Python", "category": "programming_languages", "confidence": 0.9},
+      {"skill": "JavaScript", "category": "programming_languages", "confidence": 0.8}
+    ],
+    "experience_years": 3,
+    "education_level": "Bachelor's Degree",
+    "preferred_locations": ["Remote"],
+    "preferred_salary_min": 70000,
+    "preferred_salary_max": 100000,
+    "preferred_industries": ["Technology"],
+    "career_level": "mid",
+    "work_preferences": {"remote_work": true},
+    "bio": "Mid-level developer looking to grow skills",
+    "resume_text": "Software developer with 3 years experience in Python and JavaScript"
+  },
+  "job_postings": [
+    {
+      "job_id": "job_004",
+      "title": "Senior Python Developer",
+      "company": "GrowthCorp",
+      "description": "Senior role with Python, AWS, and machine learning",
+      "required_skills": ["Python", "AWS", "Machine Learning"],
+      "preferred_skills": ["TensorFlow", "Docker"],
+      "experience_required": "5+ years",
+      "education_required": "Bachelor's degree",
+      "location": "Remote",
+      "salary_min": 110000,
+      "salary_max": 150000,
+      "industry": "Technology",
+      "job_type": "full-time",
+      "remote_allowed": true,
+      "posted_date": "2025-05-30T00:00:00Z"
+    }
+  ],
+  "recommendation_type": "skill_growth"
+}

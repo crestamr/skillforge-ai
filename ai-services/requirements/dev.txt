@@ -1,0 +1,79 @@
+# AI Services Development Requirements for SkillForge AI
+
+# Core Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Machine Learning & AI
+torch>=2.1.0
+transformers>=4.35.0
+sentence-transformers>=2.2.0
+datasets>=2.14.0
+accelerate>=0.24.0
+
+# Computer Vision
+opencv-python==4.8.1.78
+pillow==10.1.0
+torchvision==0.16.1
+
+# NLP Libraries
+nltk==3.8.1
+spacy==3.7.2
+textblob==0.17.1
+
+# Vector Database
+pinecone-client==2.2.4
+
+# Audio Processing
+librosa==0.10.1
+soundfile==0.12.1
+
+# Scientific Computing
+numpy==1.24.4
+pandas==2.1.3
+scipy==1.11.4
+scikit-learn==1.3.2
+
+# HTTP Client
+httpx==0.25.2
+requests==2.31.0
+
+# Data Validation
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Caching
+redis==5.0.1
+
+# Background Tasks
+celery==5.3.4
+
+# Development Tools
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Monitoring & Logging
+structlog==23.2.0
+sentry-sdk[fastapi]==1.38.0
+
+# Environment
+python-dotenv==1.0.0
+
+# Utilities
+click==8.1.7
+rich==13.7.0
+tqdm==4.66.1
+
+# Model Performance
+optimum==1.14.1
+
+# File Processing
+python-magic==0.4.27
+
+# Metrics
+prometheus-client==0.19.0

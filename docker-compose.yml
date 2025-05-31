@@ -1,0 +1,322 @@
+services:
+  # ================================
+  # Frontend Service (Next.js 14)
+  # ================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_AI_SERVICE_URL=http://localhost:8001
+      - NEXT_PUBLIC_WEBSOCKET_URL=ws://localhost:8000/ws
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=dev-secret-key-change-in-production
+    depends_on:
+      - backend
+      - ai-services
+    networks:
+      - skillforge-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ================================
+  # Backend API Service (FastAPI)
+  # ================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://skillforge_user:skillforge_pass@postgres:5432/skillforge_db
+      - MONGODB_URL=mongodb://mongo:27017/skillforge_db
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
+      - AI_SERVICE_URL=http://ai-services:8001
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - GITHUB_CLIENT_ID=your-github-client-id
+      - GITHUB_CLIENT_SECRET=your-github-client-secret
+      - LINKEDIN_CLIENT_ID=your-linkedin-client-id
+      - LINKEDIN_CLIENT_SECRET=your-linkedin-client-secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - skillforge-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ================================
+  # AI Services (HuggingFace Models)
+  # ================================
+  ai-services:
+    build:
+      context: ./ai-services
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./ai-services:/app
+      - ai-models-cache:/app/models
+    environment:
+      - ENVIRONMENT=development
+      - HUGGINGFACE_API_TOKEN=${HUGGINGFACE_API_TOKEN}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_ENVIRONMENT=${PINECONE_ENVIRONMENT}
+      - REDIS_URL=redis://redis:6379
+      - MODEL_CACHE_DIR=/app/models
+      - GPU_ENABLED=false
+      - BATCH_SIZE=16
+      - MAX_SEQUENCE_LENGTH=512
+      - INFERENCE_TIMEOUT=30
+      - CACHE_TTL=3600
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - skillforge-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ================================
+  # PostgreSQL Database
+  # ================================
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=skillforge_db
+      - POSTGRES_USER=skillforge_user
+      - POSTGRES_PASSWORD=skillforge_pass
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - skillforge-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skillforge_user -d skillforge_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ================================
+  # MongoDB Database
+  # ================================
+  mongo:
+    image: mongo:6-jammy
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=skillforge_user
+      - MONGO_INITDB_ROOT_PASSWORD=skillforge_pass
+      - MONGO_INITDB_DATABASE=skillforge_db
+    volumes:
+      - mongo_data:/data/db
+      - ./infrastructure/docker/mongo/init.js:/docker-entrypoint-initdb.d/init.js
+    networks:
+      - skillforge-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ================================
+  # Redis Cache & Session Store
+  # ================================
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass skillforge_redis_pass
+    volumes:
+      - redis_data:/data
+    networks:
+      - skillforge-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ================================
+  # Celery Worker (Background Jobs)
+  # ================================
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=4
+    volumes:
+      - ./backend:/app
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://skillforge_user:skillforge_pass@postgres:5432/skillforge_db
+      - MONGODB_URL=mongodb://mongo:27017/skillforge_db
+      - REDIS_URL=redis://redis:6379
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - AI_SERVICE_URL=http://ai-services:8001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - skillforge-network
+    restart: unless-stopped
+
+  # ================================
+  # Celery Beat (Scheduled Tasks)
+  # ================================
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    command: celery -A app.core.celery_app beat --loglevel=info
+    volumes:
+      - ./backend:/app
+      - celery_beat_data:/app/celerybeat-schedule
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://skillforge_user:skillforge_pass@postgres:5432/skillforge_db
+      - MONGODB_URL=mongodb://mongo:27017/skillforge_db
+      - REDIS_URL=redis://redis:6379
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - skillforge-network
+    restart: unless-stopped
+
+  # ================================
+  # Flower (Celery Monitoring)
+  # ================================
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    command: celery -A app.core.celery_app flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - FLOWER_BASIC_AUTH=admin:skillforge_flower_pass
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - skillforge-network
+    restart: unless-stopped
+
+  # ================================
+  # MinIO (S3-compatible Storage)
+  # ================================
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=skillforge_minio_user
+      - MINIO_ROOT_PASSWORD=skillforge_minio_pass
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - skillforge-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ================================
+  # Nginx (Reverse Proxy)
+  # ================================
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./infrastructure/docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - frontend
+      - backend
+      - ai-services
+    networks:
+      - skillforge-network
+    restart: unless-stopped
+
+# ================================
+# Networks
+# ================================
+networks:
+  skillforge-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ================================
+# Volumes
+# ================================
+volumes:
+  postgres_data:
+    driver: local
+  mongo_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  ai-models-cache:
+    driver: local
+  celery_beat_data:
+    driver: local

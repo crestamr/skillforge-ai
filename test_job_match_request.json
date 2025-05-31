@@ -1,0 +1,81 @@
+{
+  "user_profile": {
+    "user_id": "user_123",
+    "skills": [
+      {"skill": "Python", "category": "programming_languages", "confidence": 0.9},
+      {"skill": "React", "category": "frameworks", "confidence": 0.8},
+      {"skill": "PostgreSQL", "category": "databases", "confidence": 0.7},
+      {"skill": "AWS", "category": "cloud_platforms", "confidence": 0.6}
+    ],
+    "experience_years": 5,
+    "education_level": "Bachelor's Degree in Computer Science",
+    "preferred_locations": ["San Francisco", "Remote"],
+    "preferred_salary_min": 90000,
+    "preferred_salary_max": 130000,
+    "preferred_industries": ["Technology", "Fintech"],
+    "career_level": "senior",
+    "work_preferences": {
+      "remote_work": true,
+      "team_size": "medium",
+      "work_style": "collaborative"
+    },
+    "bio": "Experienced full-stack developer with expertise in Python and React",
+    "resume_text": "Senior Software Engineer with 5 years of experience building scalable web applications using Python, React, and cloud technologies. Led development teams and delivered high-impact projects."
+  },
+  "job_postings": [
+    {
+      "job_id": "job_001",
+      "title": "Senior Full Stack Developer",
+      "company": "TechCorp Inc",
+      "description": "We are looking for a Senior Full Stack Developer to join our team. You will work with Python, React, and AWS to build scalable applications.",
+      "required_skills": ["Python", "React", "PostgreSQL"],
+      "preferred_skills": ["AWS", "Docker", "Kubernetes"],
+      "experience_required": "5+ years",
+      "education_required": "Bachelor's degree",
+      "location": "San Francisco",
+      "salary_min": 100000,
+      "salary_max": 140000,
+      "industry": "Technology",
+      "job_type": "full-time",
+      "remote_allowed": true,
+      "posted_date": "2025-05-30T00:00:00Z"
+    },
+    {
+      "job_id": "job_002",
+      "title": "Python Developer",
+      "company": "DataTech Solutions",
+      "description": "Join our data engineering team to build Python-based data pipelines and analytics platforms.",
+      "required_skills": ["Python", "SQL", "Data Analysis"],
+      "preferred_skills": ["Machine Learning", "TensorFlow", "Apache Spark"],
+      "experience_required": "3+ years",
+      "education_required": "Bachelor's degree",
+      "location": "Remote",
+      "salary_min": 85000,
+      "salary_max": 120000,
+      "industry": "Technology",
+      "job_type": "full-time",
+      "remote_allowed": true,
+      "posted_date": "2025-05-29T00:00:00Z"
+    },
+    {
+      "job_id": "job_003",
+      "title": "Frontend React Developer",
+      "company": "StartupXYZ",
+      "description": "Looking for a React specialist to build modern user interfaces for our fintech platform.",
+      "required_skills": ["React", "JavaScript", "CSS"],
+      "preferred_skills": ["TypeScript", "Redux", "Material-UI"],
+      "experience_required": "4+ years",
+      "education_required": "Bachelor's degree preferred",
+      "location": "New York",
+      "salary_min": 95000,
+      "salary_max": 125000,
+      "industry": "Fintech",
+      "job_type": "full-time",
+      "remote_allowed": false,
+      "posted_date": "2025-05-28T00:00:00Z"
+    }
+  ],
+  "strategy": "hybrid",
+  "max_results": 10,
+  "min_score_threshold": 0.3
+}
