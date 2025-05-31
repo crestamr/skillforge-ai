@@ -1,0 +1,284 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: datadog-agent
+  namespace: skillforge-ai-monitoring
+  labels:
+    app.kubernetes.io/name: datadog-agent
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: datadog-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: datadog-agent
+        app.kubernetes.io/component: monitoring
+      annotations:
+        ad.datadoghq.com/agent.check_names: '["cpu","memory","disk","network"]'
+        ad.datadoghq.com/agent.init_configs: '[{},{},{},{}]'
+        ad.datadoghq.com/agent.instances: '[{},{},{},{}]'
+    spec:
+      serviceAccountName: datadog-agent
+      containers:
+      - name: datadog-agent
+        image: gcr.io/datadoghq/agent:7
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8125
+          name: dogstatsdport
+          protocol: UDP
+        - containerPort: 8126
+          name: traceport
+          protocol: TCP
+        env:
+        - name: DD_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: datadog-secret
+              key: api-key
+        - name: DD_APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: datadog-secret
+              key: app-key
+        - name: DD_SITE
+          value: "datadoghq.com"
+        - name: DD_KUBERNETES_KUBELET_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: DD_CLUSTER_NAME
+          value: "skillforge-ai-cluster"
+        - name: DD_CLUSTER_AGENT_ENABLED
+          value: "true"
+        - name: DD_CLUSTER_AGENT_KUBERNETES_SERVICE_NAME
+          value: "datadog-cluster-agent"
+        - name: DD_CLUSTER_AGENT_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: datadog-secret
+              key: token
+        - name: DD_COLLECT_KUBERNETES_EVENTS
+          value: "true"
+        - name: DD_LEADER_ELECTION
+          value: "true"
+        - name: DD_APM_ENABLED
+          value: "true"
+        - name: DD_APM_NON_LOCAL_TRAFFIC
+          value: "true"
+        - name: DD_LOGS_ENABLED
+          value: "true"
+        - name: DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL
+          value: "true"
+        - name: DD_LOGS_CONFIG_K8S_CONTAINER_USE_FILE
+          value: "true"
+        - name: DD_DOGSTATSD_NON_LOCAL_TRAFFIC
+          value: "true"
+        - name: DD_PROCESS_AGENT_ENABLED
+          value: "true"
+        - name: DD_SYSTEM_PROBE_ENABLED
+          value: "true"
+        - name: DD_SYSTEM_PROBE_EXTERNAL
+          value: "true"
+        - name: DD_SYSPROBE_SOCKET
+          value: "/opt/datadog-agent/run/sysprobe.sock"
+        - name: DD_TAGS
+          value: "env:production service:skillforge-ai"
+        volumeMounts:
+        - name: dockersocketdir
+          mountPath: /host/var/run
+          mountPropagation: None
+        - name: procdir
+          mountPath: /host/proc
+          mountPropagation: None
+          readOnly: true
+        - name: cgroups
+          mountPath: /host/sys/fs/cgroup
+          mountPropagation: None
+          readOnly: true
+        - name: debugfs
+          mountPath: /sys/kernel/debug
+          mountPropagation: None
+        - name: s6-run
+          mountPath: /opt/datadog-agent/run
+          mountPropagation: None
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5555
+          initialDelaySeconds: 15
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5555
+          initialDelaySeconds: 15
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+      - name: system-probe
+        image: gcr.io/datadoghq/agent:7
+        imagePullPolicy: Always
+        command:
+        - /opt/datadog-agent/embedded/bin/system-probe
+        env:
+        - name: DD_SYSTEM_PROBE_ENABLED
+          value: "true"
+        - name: DD_SYSPROBE_SOCKET
+          value: "/opt/datadog-agent/run/sysprobe.sock"
+        resources:
+          requests:
+            memory: "150Mi"
+            cpu: "200m"
+          limits:
+            memory: "150Mi"
+            cpu: "200m"
+        securityContext:
+          capabilities:
+            add:
+            - SYS_ADMIN
+            - SYS_RESOURCE
+            - SYS_PTRACE
+            - NET_ADMIN
+            - NET_BROADCAST
+            - NET_RAW
+            - IPC_LOCK
+            - CHOWN
+        volumeMounts:
+        - name: procdir
+          mountPath: /host/proc
+          mountPropagation: None
+          readOnly: true
+        - name: cgroups
+          mountPath: /host/sys/fs/cgroup
+          mountPropagation: None
+          readOnly: true
+        - name: debugfs
+          mountPath: /sys/kernel/debug
+          mountPropagation: None
+        - name: s6-run
+          mountPath: /opt/datadog-agent/run
+          mountPropagation: None
+      volumes:
+      - name: dockersocketdir
+        hostPath:
+          path: /var/run
+      - name: procdir
+        hostPath:
+          path: /proc
+      - name: cgroups
+        hostPath:
+          path: /sys/fs/cgroup
+      - name: s6-run
+        emptyDir: {}
+      - name: debugfs
+        hostPath:
+          path: /sys/kernel/debug
+      tolerations:
+      - operator: Exists
+      nodeSelector:
+        kubernetes.io/os: linux
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: datadog-agent
+  namespace: skillforge-ai-monitoring
+  labels:
+    app.kubernetes.io/name: datadog-agent
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: datadog-agent
+  labels:
+    app.kubernetes.io/name: datadog-agent
+rules:
+- apiGroups: [""]
+  resources:
+  - services
+  - events
+  - endpoints
+  - pods
+  - nodes
+  - componentstatuses
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["quota.openshift.io"]
+  resources:
+  - clusterresourcequotas
+  verbs: ["get", "list"]
+- apiGroups: ["autoscaling"]
+  resources:
+  - horizontalpodautoscalers
+  verbs: ["list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  resourceNames: ["datadog-leader-election"]
+  verbs: ["get", "update"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["create"]
+- nonResourceURLs:
+  - "/version"
+  - "/healthz"
+  - "/metrics"
+  verbs: ["get"]
+- apiGroups: [""]
+  resources:
+  - nodes/metrics
+  - nodes/spec
+  - nodes/proxy
+  - nodes/stats
+  verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: datadog-agent
+  labels:
+    app.kubernetes.io/name: datadog-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: datadog-agent
+subjects:
+- kind: ServiceAccount
+  name: datadog-agent
+  namespace: skillforge-ai-monitoring
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: datadog-agent
+  namespace: skillforge-ai-monitoring
+  labels:
+    app.kubernetes.io/name: datadog-agent
+spec:
+  selector:
+    app.kubernetes.io/name: datadog-agent
+  ports:
+  - port: 8125
+    name: dogstatsdport
+    protocol: UDP
+  - port: 8126
+    name: traceport
+    protocol: TCP

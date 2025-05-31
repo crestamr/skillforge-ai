@@ -1,0 +1,4 @@
+# Minimal AI Services Requirements for SkillForge AI
+fastapi
+uvicorn[standard]
+python-dotenv
