@@ -136,8 +136,9 @@ export default function AssessmentsPage() {
         ];
       });
 
-      setAssessments(assessmentsResponse.data || assessmentsResponse);
-      setUserSkills(skillsResponse);
+      const assessmentsData = (assessmentsResponse as any)?.data || assessmentsResponse;
+      setAssessments(Array.isArray(assessmentsData) ? assessmentsData : []);
+      setUserSkills(Array.isArray(skillsResponse) ? skillsResponse : []);
 
     } catch (error: any) {
       console.error('Failed to load assessments:', error);
@@ -183,7 +184,7 @@ export default function AssessmentsPage() {
     return (
       <ProtectedRoute requireAuth={true} requireOnboarding={true}>
         <InteractiveSkillAssessment
-          assessmentId={activeAssessment}
+          skillId={activeAssessment}
           onComplete={handleAssessmentComplete}
           onCancel={() => setActiveAssessment(null)}
         />

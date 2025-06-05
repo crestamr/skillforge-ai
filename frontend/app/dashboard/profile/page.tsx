@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { ImprovedDashboardLayout } from "@/components/layout/improved-dashboard-layout"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar-simple"
+import DashboardLayout from "@/components/layout/DashboardLayout"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress-simple"
+import { Progress } from "@/components/ui/progress"
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
@@ -52,7 +52,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <ImprovedDashboardLayout>
+    <DashboardLayout>
       <div className="px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -360,6 +360,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </ImprovedDashboardLayout>
+    </DashboardLayout>
   )
 }

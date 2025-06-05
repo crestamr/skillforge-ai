@@ -98,7 +98,7 @@ const InteractiveSkillAssessment: React.FC<{
   onComplete: (results: any) => void;
   onCancel: () => void;
 }> = ({ skillId, onComplete, onCancel }) => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { showToast } = useToast();
 
   // State management
@@ -131,7 +131,7 @@ const InteractiveSkillAssessment: React.FC<{
       const response = await fetch(`/api/v1/assessments/start/${skillId}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -268,7 +268,7 @@ const InteractiveSkillAssessment: React.FC<{
       const response = await fetch('/api/v1/assessments/evaluate', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -295,7 +295,7 @@ const InteractiveSkillAssessment: React.FC<{
       const response = await fetch(`/api/v1/assessments/complete/${session?.id}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -328,7 +328,7 @@ const InteractiveSkillAssessment: React.FC<{
       const response = await fetch('/api/v1/assessments/run-code', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

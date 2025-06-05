@@ -141,7 +141,7 @@ export default function SkillsPage() {
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="font-medium text-gray-900 dark:text-white">{skill.name}</h3>
                           {skill.trending && (
-                            <Badge variant="success" className="text-xs">
+                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
                               📈 Trending
                             </Badge>
                           )}

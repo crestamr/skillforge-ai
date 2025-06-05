@@ -20,6 +20,7 @@ export interface User {
   onboardingCompleted: boolean;
   createdAt: string;
   lastLoginAt: string;
+  token?: string;
 }
 
 export interface Skill {
@@ -54,6 +55,13 @@ export interface LearningPath {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   progress: number;
   isEnrolled: boolean;
+  isRecommended?: boolean;
+  category?: string;
+  provider?: string;
+  rating?: number;
+  enrolledCount?: number;
+  price?: number;
+  currency?: string;
 }
 
 export interface Notification {

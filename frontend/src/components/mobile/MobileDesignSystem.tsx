@@ -181,11 +181,11 @@ export const MobileDesignSystem: React.FC<MobileDesignSystemProps> = ({
   const isTouch = useMediaQuery(breakpoints.touch);
   
   // PWA and mobile hooks
-  const { isInstalled, canInstall, install } = usePWA();
+  const { isInstalled, isInstallable, installApp, isStandalone } = usePWA();
   const { isOnline, connectionType } = useNetworkStatus();
-  const { deviceType, orientation, isStandalone } = useDeviceDetection();
+  const { isMobile: deviceIsMobile, orientation, isDesktop } = useDeviceDetection();
   const { safeAreaInsets } = useSafeArea();
-  const { isVirtualKeyboardOpen, keyboardHeight } = useVirtualKeyboard();
+  const { isVisible: isVirtualKeyboardOpen, height: keyboardHeight } = useVirtualKeyboard();
   
   // State management
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -201,14 +201,14 @@ export const MobileDesignSystem: React.FC<MobileDesignSystemProps> = ({
     trackTouch: true,
   });
   
-  const gestureHandlers = useGestures({
-    onPinch: (scale) => {
-      // Handle pinch-to-zoom if needed
-      console.log('Pinch gesture:', scale);
+  const gestureRef = useGestures({
+    onPinchIn: () => {
+      // Handle pinch-in gesture
+      console.log('Pinch in gesture');
     },
-    onRotate: (angle) => {
-      // Handle rotation gestures
-      console.log('Rotate gesture:', angle);
+    onPinchOut: () => {
+      // Handle pinch-out gesture
+      console.log('Pinch out gesture');
     },
   });
   
@@ -262,10 +262,10 @@ export const MobileDesignSystem: React.FC<MobileDesignSystemProps> = ({
   
   // PWA install prompt
   useEffect(() => {
-    if (canInstall && !isInstalled && isMobile) {
+    if (isInstallable && !isInstalled && isMobile) {
       setNotifications(prev => [...prev, 'Install SkillForge AI for a better experience!']);
     }
-  }, [canInstall, isInstalled, isMobile]);
+  }, [isInstallable, isInstalled, isMobile]);
   
   // Render drawer content
   const renderDrawerContent = () => (
@@ -311,10 +311,10 @@ export const MobileDesignSystem: React.FC<MobileDesignSystemProps> = ({
       </List>
       
       {/* PWA Install Button */}
-      {canInstall && !isInstalled && (
+      {isInstallable && !isInstalled && (
         <Box sx={{ p: 2, mt: 'auto' }}>
           <button
-            onClick={install}
+            onClick={installApp}
             style={{
               width: '100%',
               padding: '12px',
@@ -335,26 +335,26 @@ export const MobileDesignSystem: React.FC<MobileDesignSystemProps> = ({
   );
   
   return (
-    <Box
-      {...swipeHandlers}
-      {...gestureHandlers}
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        backgroundColor: 'background.default',
-        
-        // Handle safe areas
-        paddingTop: isStandalone ? 'env(safe-area-inset-top)' : 0,
-        paddingBottom: isStandalone ? 'env(safe-area-inset-bottom)' : 0,
-        paddingLeft: 'env(safe-area-inset-left)',
-        paddingRight: 'env(safe-area-inset-right)',
-        
-        // Adjust for virtual keyboard
-        marginBottom: isVirtualKeyboardOpen ? `${keyboardHeight}px` : 0,
-        transition: 'margin-bottom 0.3s ease',
-      }}
-    >
+    <div ref={gestureRef as React.RefObject<HTMLDivElement>}>
+      <Box
+        {...swipeHandlers}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          backgroundColor: 'background.default',
+
+          // Handle safe areas
+          paddingTop: isStandalone ? 'env(safe-area-inset-top)' : 0,
+          paddingBottom: isStandalone ? 'env(safe-area-inset-bottom)' : 0,
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)',
+
+          // Adjust for virtual keyboard
+          marginBottom: isVirtualKeyboardOpen ? `${keyboardHeight}px` : 0,
+          transition: 'margin-bottom 0.3s ease',
+        }}
+      >
       {/* App Bar */}
       <MobileAppBar position="fixed" elevation={0}>
         <Toolbar>
@@ -493,7 +493,8 @@ export const MobileDesignSystem: React.FC<MobileDesignSystemProps> = ({
           </Alert>
         </Snackbar>
       ))}
-    </Box>
+      </Box>
+    </div>
   );
 };
 

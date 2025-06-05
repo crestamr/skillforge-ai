@@ -1,0 +1,262 @@
+# SkillForge AI Alert Rules
+# Comprehensive alerting for production monitoring
+
+groups:
+  - name: skillforge.api
+    rules:
+      - alert: HighAPIErrorRate
+        expr: rate(api_requests_total{status_code=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: skillforge-api
+        annotations:
+          summary: "High API error rate detected"
+          description: "API error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+          runbook_url: "https://docs.skillforge.ai/runbooks/high-error-rate"
+
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(api_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: skillforge-api
+        annotations:
+          summary: "High API latency detected"
+          description: "95th percentile latency is {{ $value }}s for the last 5 minutes"
+
+      - alert: APIEndpointDown
+        expr: up{job="skillforge-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: skillforge-api
+        annotations:
+          summary: "API endpoint is down"
+          description: "SkillForge API endpoint has been down for more than 1 minute"
+
+  - name: skillforge.database
+    rules:
+      - alert: DatabaseConnectionsHigh
+        expr: database_connections_active > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: skillforge-database
+        annotations:
+          summary: "High number of database connections"
+          description: "Database has {{ $value }} active connections"
+
+      - alert: DatabaseSlowQueries
+        expr: rate(postgres_slow_queries_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          service: skillforge-database
+        annotations:
+          summary: "High rate of slow database queries"
+          description: "{{ $value }} slow queries per second in the last 5 minutes"
+
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: skillforge-database
+        annotations:
+          summary: "Database is down"
+          description: "PostgreSQL database has been down for more than 1 minute"
+
+  - name: skillforge.cache
+    rules:
+      - alert: LowCacheHitRate
+        expr: cache_hit_rate < 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: skillforge-cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} for {{ $labels.cache_type }}"
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: skillforge-cache
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis cache has been down for more than 1 minute"
+
+  - name: skillforge.system
+    rules:
+      - alert: HighCPUUsage
+        expr: cpu_usage_percent > 80
+        for: 10m
+        labels:
+          severity: warning
+          service: skillforge-system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% for more than 10 minutes"
+
+      - alert: HighMemoryUsage
+        expr: (memory_usage_bytes{type="used"} / memory_usage_bytes{type="total"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: skillforge-system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }} for more than 5 minutes"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+          service: skillforge-system
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is {{ $value | humanizePercentage }} available on {{ $labels.device }}"
+
+  - name: skillforge.business
+    rules:
+      - alert: LowUserRegistrations
+        expr: rate(user_registrations_total[1h]) < 0.1
+        for: 2h
+        labels:
+          severity: warning
+          service: skillforge-business
+        annotations:
+          summary: "Low user registration rate"
+          description: "User registration rate is {{ $value }} per hour for the last 2 hours"
+
+      - alert: HighAssessmentFailureRate
+        expr: (rate(assessments_completed_total{result="failed"}[1h]) / rate(assessments_completed_total[1h])) > 0.5
+        for: 1h
+        labels:
+          severity: warning
+          service: skillforge-business
+        annotations:
+          summary: "High assessment failure rate"
+          description: "Assessment failure rate is {{ $value | humanizePercentage }} for the last hour"
+
+      - alert: NoJobMatchesFound
+        expr: rate(job_matches_found_total[1h]) == 0
+        for: 2h
+        labels:
+          severity: warning
+          service: skillforge-business
+        annotations:
+          summary: "No job matches found"
+          description: "No job matches have been found for the last 2 hours"
+
+  - name: skillforge.ai
+    rules:
+      - alert: HighModelInferenceLatency
+        expr: histogram_quantile(0.95, rate(model_inference_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: skillforge-ai
+        annotations:
+          summary: "High AI model inference latency"
+          description: "95th percentile model inference latency is {{ $value }}s for {{ $labels.model_name }}"
+
+      - alert: LowModelAccuracy
+        expr: model_accuracy_score < 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: skillforge-ai
+        annotations:
+          summary: "Low AI model accuracy"
+          description: "Model accuracy is {{ $value }} for {{ $labels.model_name }}"
+
+      - alert: AIServiceDown
+        expr: up{job="skillforge-ai-services"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: skillforge-ai
+        annotations:
+          summary: "AI service is down"
+          description: "SkillForge AI service has been down for more than 1 minute"
+
+  - name: skillforge.security
+    rules:
+      - alert: HighFailedLoginAttempts
+        expr: rate(failed_login_attempts_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: skillforge-security
+        annotations:
+          summary: "High rate of failed login attempts"
+          description: "{{ $value }} failed login attempts per second in the last 5 minutes"
+
+      - alert: SuspiciousAPIActivity
+        expr: rate(api_requests_total{status_code="401"}[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: skillforge-security
+        annotations:
+          summary: "Suspicious API activity detected"
+          description: "High rate of unauthorized API requests: {{ $value }} per second"
+
+      - alert: RateLimitExceeded
+        expr: rate(api_requests_total{status_code="429"}[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: skillforge-security
+        annotations:
+          summary: "Rate limit frequently exceeded"
+          description: "Rate limit exceeded {{ $value }} times per second in the last 5 minutes"
+
+  - name: skillforge.external
+    rules:
+      - alert: ExternalAPIDown
+        expr: probe_success{job="blackbox-http"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: skillforge-external
+        annotations:
+          summary: "External service is down"
+          description: "External service {{ $labels.instance }} has been down for more than 2 minutes"
+
+      - alert: HighExternalAPILatency
+        expr: probe_duration_seconds{job="blackbox-http"} > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: skillforge-external
+        annotations:
+          summary: "High external API latency"
+          description: "External API {{ $labels.instance }} latency is {{ $value }}s"
+
+  - name: skillforge.sla
+    rules:
+      - alert: SLAViolation
+        expr: (rate(api_requests_total{status_code=~"2.."}[5m]) / rate(api_requests_total[5m])) < 0.99
+        for: 5m
+        labels:
+          severity: critical
+          service: skillforge-sla
+        annotations:
+          summary: "SLA violation: API availability below 99%"
+          description: "API availability is {{ $value | humanizePercentage }} for the last 5 minutes"
+
+      - alert: ResponseTimeSLAViolation
+        expr: histogram_quantile(0.95, rate(api_request_duration_seconds_bucket[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+          service: skillforge-sla
+        annotations:
+          summary: "SLA violation: Response time above 1s"
+          description: "95th percentile response time is {{ $value }}s for the last 10 minutes"

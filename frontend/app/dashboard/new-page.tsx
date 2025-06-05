@@ -8,7 +8,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useAppStore, useUserData, useJobsData, useLearningData } from '../../src/store/useAppStore';
-import { userApi, jobsApi, learningApi, analyticsApi } from '../../src/lib/api';
+import { userApi, jobsApi, learningApi, analyticsApi, skillsApi } from '../../src/lib/api';
 import ProtectedRoute from '../../src/components/auth/ProtectedRoute';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../src/components/ui/card';
 import { Button } from '../../src/components/ui/button';
@@ -61,8 +61,8 @@ export default function ComprehensiveDashboard() {
       // Load user skills if needed
       if (force || shouldRefresh('userSkills')) {
         promises.push(
-          userApi.getUserSkills().then((skills) => {
-            setUserSkills(skills);
+          skillsApi.getUserSkills().then((skills) => {
+            setUserSkills(Array.isArray(skills) ? skills : []);
             updateLastUpdated('userSkills');
           }).catch(() => {
             // Fallback data for development
@@ -79,7 +79,7 @@ export default function ComprehensiveDashboard() {
       // Load user stats
       promises.push(
         userApi.getStats().then((stats) => {
-          setUserStats(stats);
+          setUserStats(stats as any);
         }).catch(() => {
           // Fallback data for development
           setUserStats({
@@ -95,7 +95,7 @@ export default function ComprehensiveDashboard() {
       // Load job recommendations
       promises.push(
         jobsApi.getRecommendations().then((jobs) => {
-          setJobRecommendations(jobs);
+          setJobRecommendations(Array.isArray(jobs) ? jobs : []);
         }).catch(() => {
           // Fallback data for development
           setJobRecommendations([
@@ -127,7 +127,8 @@ export default function ComprehensiveDashboard() {
       if (force || shouldRefresh('learningPaths')) {
         promises.push(
           learningApi.getLearningPaths({ enrolled: true }).then((response) => {
-            setEnrolledPaths(response.data);
+            const paths = (response as any)?.data || response;
+            setEnrolledPaths(Array.isArray(paths) ? paths : []);
             updateLastUpdated('learningPaths');
           }).catch(() => {
             // Fallback data for development
@@ -160,7 +161,7 @@ export default function ComprehensiveDashboard() {
       // Load learning recommendations
       promises.push(
         learningApi.getRecommendations().then((paths) => {
-          setLearningRecommendations(paths);
+          setLearningRecommendations(Array.isArray(paths) ? paths : []);
         }).catch(() => {
           // Fallback data for development
           setLearningRecommendations([

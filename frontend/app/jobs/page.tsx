@@ -41,8 +41,8 @@ interface Job {
   location: string;
   salary?: { min: number; max: number };
   remote: boolean;
-  description: string;
-  requiredSkills: string[];
+  description?: string;
+  requiredSkills?: string[];
   matchScore?: number;
   isBookmarked: boolean;
   applicationStatus?: string;
@@ -147,7 +147,13 @@ export default function JobsPage() {
         };
       });
 
-      setJobs(response.data || response);
+      const jobsData = (response as any)?.data || response;
+      const normalizedJobs = Array.isArray(jobsData) ? jobsData.map((job: any) => ({
+        ...job,
+        description: job.description || 'No description available',
+        requiredSkills: job.requiredSkills || []
+      })) : [];
+      setJobs(normalizedJobs);
     } catch (error: any) {
       console.error('Failed to load jobs:', error);
       setError(error.message || 'Failed to load jobs');
@@ -177,7 +183,12 @@ export default function JobsPage() {
         ];
       });
 
-      setJobRecommendations(recommendations);
+      const normalizedRecommendations = Array.isArray(recommendations) ? recommendations.map((job: any) => ({
+        ...job,
+        description: job.description || 'No description available',
+        requiredSkills: job.requiredSkills || []
+      })) : [];
+      setJobRecommendations(normalizedRecommendations);
     } catch (error) {
       console.error('Failed to load recommendations:', error);
     }
@@ -203,7 +214,12 @@ export default function JobsPage() {
         ];
       });
 
-      setSavedJobs(saved);
+      const normalizedSaved = Array.isArray(saved) ? saved.map((job: any) => ({
+        ...job,
+        description: job.description || 'No description available',
+        requiredSkills: job.requiredSkills || []
+      })) : [];
+      setSavedJobs(normalizedSaved);
     } catch (error) {
       console.error('Failed to load saved jobs:', error);
     }

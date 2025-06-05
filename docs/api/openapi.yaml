@@ -1,0 +1,948 @@
+openapi: 3.0.3
+info:
+  title: SkillForge AI API
+  description: |
+    Comprehensive API for intelligent career development and skill assessment.
+    
+    SkillForge AI provides advanced AI-powered features including:
+    - Skill assessment and verification
+    - Personalized learning path generation
+    - Job matching and recommendations
+    - Industry sentiment analysis
+    - Career progression tracking
+    
+    ## Authentication
+    All endpoints require JWT Bearer token authentication.
+    
+    ## Rate Limiting
+    API requests are rate limited based on your subscription tier.
+    
+    ## Support
+    For API support, contact: api-support@skillforge.ai
+  version: 1.0.0
+  contact:
+    name: SkillForge AI API Support
+    email: api-support@skillforge.ai
+    url: https://docs.skillforge.ai
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://skillforge.ai/terms
+
+servers:
+  - url: https://api.skillforge.ai/v1
+    description: Production server
+  - url: https://staging-api.skillforge.ai/v1
+    description: Staging server
+  - url: http://localhost:8000/api/v1
+    description: Development server
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Create a new user account with email and password
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+            examples:
+              basic_registration:
+                summary: Basic user registration
+                value:
+                  email: "john.doe@example.com"
+                  password: "SecurePass123!"
+                  first_name: "John"
+                  last_name: "Doe"
+                  terms_accepted: true
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and receive access token
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/profile:
+    get:
+      tags:
+        - Users
+      summary: Get user profile
+      description: Retrieve current user's profile information
+      operationId: getUserProfile
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    put:
+      tags:
+        - Users
+      summary: Update user profile
+      description: Update current user's profile information
+      operationId: updateUserProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdate'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /assessments:
+    get:
+      tags:
+        - Assessments
+      summary: List skill assessments
+      description: Get paginated list of available skill assessments
+      operationId: listAssessments
+      parameters:
+        - name: category
+          in: query
+          description: Filter by skill category
+          schema:
+            type: string
+            enum: [programming, frontend, backend, devops, data_science, design]
+        - name: difficulty
+          in: query
+          description: Filter by difficulty level
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Assessments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentList'
+
+  /assessments/{assessment_id}/start:
+    post:
+      tags:
+        - Assessments
+      summary: Start assessment
+      description: Begin a skill assessment session
+      operationId: startAssessment
+      parameters:
+        - name: assessment_id
+          in: path
+          required: true
+          description: Unique identifier for the assessment
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Assessment session started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentSession'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /ai/learning-paths/generate:
+    post:
+      tags:
+        - AI Services
+      summary: Generate learning path
+      description: Create personalized learning path based on user profile and goals
+      operationId: generateLearningPath
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LearningPathRequest'
+      responses:
+        '200':
+          description: Learning path generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningPath'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /ai/sentiment/technology-trends:
+    get:
+      tags:
+        - AI Services
+      summary: Get technology sentiment trends
+      description: Retrieve sentiment analysis and trends for specified technologies
+      operationId: getTechnologyTrends
+      parameters:
+        - name: technologies
+          in: query
+          required: true
+          description: Comma-separated list of technologies
+          schema:
+            type: string
+            example: "React,Python,AWS,Docker"
+      responses:
+        '200':
+          description: Technology trends retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TechnologyTrend'
+
+  /jobs/match:
+    post:
+      tags:
+        - Jobs
+      summary: Find job matches
+      description: Find jobs matching user skills and preferences
+      operationId: findJobMatches
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobMatchRequest'
+      responses:
+        '200':
+          description: Job matches found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobMatchResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login endpoint
+    
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for server-to-server authentication
+
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Number of items to return (max 100)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    
+    Offset:
+      name: offset
+      in: query
+      description: Number of items to skip for pagination
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Unauthorized:
+      description: Unauthorized - invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    ValidationError:
+      description: Validation error - invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "Invalid request parameters"
+            details:
+              type: object
+            request_id:
+              type: string
+              example: "req_1234567890"
+            timestamp:
+              type: string
+              format: date-time
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            error:
+              type: object
+              properties:
+                validation_errors:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                      message:
+                        type: string
+
+    UserRegistration:
+      type: object
+      required:
+        - email
+        - password
+        - first_name
+        - last_name
+        - terms_accepted
+      properties:
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        password:
+          type: string
+          minLength: 8
+          example: "SecurePass123!"
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "John"
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "Doe"
+        terms_accepted:
+          type: boolean
+          example: true
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required:
+        - user
+        - access_token
+        - refresh_token
+        - expires_in
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        access_token:
+          type: string
+          example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+        refresh_token:
+          type: string
+          example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+        expires_in:
+          type: integer
+          example: 3600
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - first_name
+        - last_name
+        - created_at
+      properties:
+        id:
+          type: string
+          example: "user_123"
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        profile_image_url:
+          type: string
+          format: uri
+        created_at:
+          type: string
+          format: date-time
+
+    UserProfile:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            bio:
+              type: string
+              maxLength: 500
+            skills:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserSkill'
+            career_goals:
+              type: array
+              items:
+                type: string
+            updated_at:
+              type: string
+              format: date-time
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        bio:
+          type: string
+          maxLength: 500
+        career_goals:
+          type: array
+          items:
+            type: string
+
+    UserSkill:
+      type: object
+      required:
+        - skill_id
+        - skill_name
+        - proficiency_level
+      properties:
+        skill_id:
+          type: string
+        skill_name:
+          type: string
+        proficiency_level:
+          type: integer
+          minimum: 1
+          maximum: 10
+        verified:
+          type: boolean
+        last_assessed:
+          type: string
+          format: date-time
+
+    AssessmentList:
+      type: object
+      required:
+        - assessments
+        - pagination
+      properties:
+        assessments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assessment'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Assessment:
+      type: object
+      required:
+        - id
+        - title
+        - skill_id
+        - difficulty
+        - duration_minutes
+        - question_count
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        skill_id:
+          type: string
+        difficulty:
+          type: integer
+          minimum: 1
+          maximum: 10
+        duration_minutes:
+          type: integer
+        question_count:
+          type: integer
+        passing_score:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+
+    AssessmentSession:
+      type: object
+      required:
+        - session_id
+        - assessment
+        - started_at
+        - expires_at
+      properties:
+        session_id:
+          type: string
+        assessment:
+          $ref: '#/components/schemas/Assessment'
+        started_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+
+    LearningPathRequest:
+      type: object
+      required:
+        - user_id
+        - current_skills
+        - target_role
+        - learning_pace
+        - time_commitment_hours_week
+        - budget_monthly
+      properties:
+        user_id:
+          type: string
+        current_skills:
+          type: object
+          additionalProperties:
+            type: integer
+            minimum: 0
+            maximum: 10
+        target_role:
+          type: string
+        career_goals:
+          type: array
+          items:
+            type: string
+        learning_pace:
+          type: string
+          enum: [slow, medium, fast]
+        time_commitment_hours_week:
+          type: integer
+          minimum: 1
+          maximum: 40
+        preferred_formats:
+          type: array
+          items:
+            type: string
+            enum: [video, text, interactive, audio]
+        budget_monthly:
+          type: number
+          minimum: 0
+
+    LearningPath:
+      type: object
+      required:
+        - path_id
+        - title
+        - description
+        - steps
+        - total_duration_weeks
+        - estimated_salary_increase
+        - confidence_score
+      properties:
+        path_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/LearningPathStep'
+        total_duration_weeks:
+          type: integer
+        estimated_salary_increase:
+          type: number
+        confidence_score:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    LearningPathStep:
+      type: object
+      required:
+        - skill_id
+        - skill_name
+        - skill_category
+        - resources
+        - estimated_weeks
+        - priority_score
+        - prerequisites_met
+        - milestone_description
+      properties:
+        skill_id:
+          type: string
+        skill_name:
+          type: string
+        skill_category:
+          type: string
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/LearningResource'
+        estimated_weeks:
+          type: integer
+        priority_score:
+          type: number
+        prerequisites_met:
+          type: boolean
+        milestone_description:
+          type: string
+
+    LearningResource:
+      type: object
+      required:
+        - id
+        - title
+        - provider
+        - url
+        - skill_id
+        - difficulty
+        - duration_hours
+        - rating
+        - cost
+        - format
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        provider:
+          type: string
+        url:
+          type: string
+          format: uri
+        skill_id:
+          type: string
+        difficulty:
+          type: integer
+          minimum: 1
+          maximum: 10
+        duration_hours:
+          type: integer
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+        cost:
+          type: number
+          minimum: 0
+        format:
+          type: string
+          enum: [video, text, interactive, audio]
+        prerequisites:
+          type: array
+          items:
+            type: string
+
+    TechnologyTrend:
+      type: object
+      required:
+        - technology
+        - current_sentiment
+        - sentiment_change_7d
+        - sentiment_change_30d
+        - volume_change_7d
+        - volume_change_30d
+        - trend_direction
+        - risk_level
+        - confidence_score
+        - opportunities
+        - warnings
+      properties:
+        technology:
+          type: string
+        current_sentiment:
+          type: number
+          minimum: -1
+          maximum: 1
+        sentiment_change_7d:
+          type: number
+        sentiment_change_30d:
+          type: number
+        volume_change_7d:
+          type: number
+        volume_change_30d:
+          type: number
+        trend_direction:
+          type: string
+          enum: [rising, falling, stable]
+        risk_level:
+          type: string
+          enum: [low, medium, high]
+        confidence_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        opportunities:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            type: string
+
+    JobMatchRequest:
+      type: object
+      required:
+        - user_skills
+      properties:
+        user_skills:
+          type: object
+          additionalProperties:
+            type: integer
+            minimum: 0
+            maximum: 10
+        preferences:
+          $ref: '#/components/schemas/JobPreferences'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+
+    JobPreferences:
+      type: object
+      properties:
+        locations:
+          type: array
+          items:
+            type: string
+        salary_min:
+          type: integer
+        salary_max:
+          type: integer
+        job_types:
+          type: array
+          items:
+            type: string
+            enum: [full-time, part-time, contract, internship]
+        company_sizes:
+          type: array
+          items:
+            type: string
+            enum: [startup, small, medium, large, enterprise]
+        remote_ok:
+          type: boolean
+
+    JobMatchResponse:
+      type: object
+      required:
+        - matches
+        - pagination
+      properties:
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobMatch'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    JobMatch:
+      type: object
+      required:
+        - job_id
+        - title
+        - company
+        - location
+        - match_score
+        - skill_match
+      properties:
+        job_id:
+          type: string
+        title:
+          type: string
+        company:
+          type: string
+        location:
+          type: string
+        salary_range:
+          $ref: '#/components/schemas/SalaryRange'
+        match_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        skill_match:
+          $ref: '#/components/schemas/SkillMatch'
+        posted_at:
+          type: string
+          format: date-time
+        application_deadline:
+          type: string
+          format: date-time
+
+    SalaryRange:
+      type: object
+      required:
+        - min
+        - max
+        - currency
+      properties:
+        min:
+          type: integer
+        max:
+          type: integer
+        currency:
+          type: string
+          example: "USD"
+
+    SkillMatch:
+      type: object
+      required:
+        - matched_skills
+        - missing_skills
+        - skill_gaps
+      properties:
+        matched_skills:
+          type: array
+          items:
+            type: string
+        missing_skills:
+          type: array
+          items:
+            type: string
+        skill_gaps:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkillGap'
+
+    SkillGap:
+      type: object
+      required:
+        - skill
+        - required_level
+        - current_level
+        - gap_size
+      properties:
+        skill:
+          type: string
+        required_level:
+          type: integer
+          minimum: 1
+          maximum: 10
+        current_level:
+          type: integer
+          minimum: 0
+          maximum: 10
+        gap_size:
+          type: integer
+
+    Pagination:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+        - has_more
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_more:
+          type: boolean
+        next_cursor:
+          type: string

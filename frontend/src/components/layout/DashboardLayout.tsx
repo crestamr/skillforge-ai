@@ -180,7 +180,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Desktop Sidebar */}
-      <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col ${isSidebarOpen ? 'lg:translate-x-0' : 'lg:-translate-x-full'} transition-transform duration-300 ease-in-out z-50`}>
+      <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col transition-transform duration-300 ease-in-out z-50 ${isSidebarOpen ? 'lg:translate-x-0' : 'lg:-translate-x-full'}`}>
         <Sidebar />
       </div>
 
@@ -192,7 +192,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       </Sheet>
 
       {/* Main Content */}
-      <div className={`lg:pl-64 ${!isSidebarOpen ? 'lg:pl-0' : ''} transition-all duration-300 ease-in-out`}>
+      <div className={`transition-all duration-300 ease-in-out ${isSidebarOpen ? 'lg:pl-64' : 'lg:pl-0'}`}>
         {/* Top Navigation */}
         <div className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">

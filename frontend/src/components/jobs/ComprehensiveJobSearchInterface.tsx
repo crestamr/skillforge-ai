@@ -59,11 +59,14 @@ import {
 
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { JobCard } from './JobCard';
+import { JobCard, Job } from './JobCard';
 import { JobMatchScore } from './JobMatchScore';
 import { SavedJobsManager } from './SavedJobsManager';
 
-interface Job {
+// Job interface is imported from JobCard
+
+// API response job format
+interface APIJob {
   id: string;
   title: string;
   company: string;
@@ -85,6 +88,33 @@ interface Job {
   applicationStatus?: 'not_applied' | 'applied' | 'interviewing' | 'offered' | 'rejected';
 }
 
+// Function to convert API job to JobCard job format
+const convertAPIJobToJob = (apiJob: APIJob): Job => ({
+  id: apiJob.id,
+  title: apiJob.title,
+  company: apiJob.company,
+  location: apiJob.location,
+  salary: apiJob.salaryMin && apiJob.salaryMax ? {
+    min: apiJob.salaryMin,
+    max: apiJob.salaryMax,
+    currency: '$'
+  } : undefined,
+  type: apiJob.employmentType === 'full_time' ? 'full-time' :
+        apiJob.employmentType === 'part_time' ? 'part-time' :
+        apiJob.employmentType === 'contract' ? 'contract' : 'remote',
+  description: apiJob.description,
+  requirements: apiJob.requirements,
+  skills: apiJob.skills,
+  postedDate: new Date(apiJob.postedDate),
+  applicationDeadline: apiJob.applicationDeadline ? new Date(apiJob.applicationDeadline) : undefined,
+  isRemote: apiJob.remote,
+  experienceLevel: 'mid', // Default value, should come from API
+  companyLogo: apiJob.companyLogo,
+  applicationUrl: `#apply-${apiJob.id}`, // Default value
+  isSaved: apiJob.isBookmarked,
+  matchScore: apiJob.matchScore,
+});
+
 interface SearchFilters {
   query: string;
   location: string;
@@ -102,12 +132,12 @@ interface SearchFilters {
 
 const ComprehensiveJobSearchInterface: React.FC = () => {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { showToast } = useToast();
 
   // State management
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<APIJob[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<APIJob[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     query: '',
@@ -126,9 +156,9 @@ const ComprehensiveJobSearchInterface: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedJob, setSelectedJob] = useState<APIJob | null>(null);
   const [showJobDetails, setShowJobDetails] = useState(false);
-  const [aiRecommendations, setAIRecommendations] = useState<Job[]>([]);
+  const [aiRecommendations, setAIRecommendations] = useState<APIJob[]>([]);
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
 
   // Constants
@@ -149,14 +179,23 @@ const ComprehensiveJobSearchInterface: React.FC = () => {
       const queryParams = new URLSearchParams({
         page: page.toString(),
         size: JOBS_PER_PAGE.toString(),
-        ...filters,
+        query: filters.query,
+        location: filters.location,
+        salaryMin: filters.salaryMin.toString(),
+        salaryMax: filters.salaryMax.toString(),
+        remote: filters.remote.toString(),
+        experienceLevel: filters.experienceLevel,
+        companySize: filters.companySize,
+        industry: filters.industry,
+        postedWithin: filters.postedWithin,
+        sortBy: filters.sortBy,
         employment_types: filters.employmentTypes.join(','),
         skills: filters.skills.join(','),
       });
 
       const response = await fetch(`/api/v1/jobs/search?${queryParams}`, {
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -189,7 +228,7 @@ const ComprehensiveJobSearchInterface: React.FC = () => {
     try {
       const response = await fetch('/api/v1/jobs/recommendations', {
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -245,7 +284,7 @@ const ComprehensiveJobSearchInterface: React.FC = () => {
       const response = await fetch(`/api/v1/jobs/${jobId}/bookmark`, {
         method,
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -278,12 +317,12 @@ const ComprehensiveJobSearchInterface: React.FC = () => {
   };
 
   // Apply to job
-  const applyToJob = async (job: Job) => {
+  const applyToJob = async (job: APIJob) => {
     try {
       const response = await fetch(`/api/v1/jobs/${job.id}/apply`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -326,7 +365,7 @@ const ComprehensiveJobSearchInterface: React.FC = () => {
     try {
       const response = await fetch('/api/v1/jobs/saved', {
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -425,14 +464,15 @@ const ComprehensiveJobSearchInterface: React.FC = () => {
               {aiRecommendations.slice(0, 3).map((job) => (
                 <Grid item xs={12} md={4} key={job.id}>
                   <JobCard
-                    job={job}
-                    onBookmark={() => toggleBookmark(job.id)}
+                    job={convertAPIJobToJob(job)}
+                    onSave={() => toggleBookmark(job.id)}
+                    onUnsave={() => toggleBookmark(job.id)}
                     onApply={() => applyToJob(job)}
                     onViewDetails={() => {
                       setSelectedJob(job);
                       setShowJobDetails(true);
                     }}
-                    compact
+                    showMatchScore
                   />
                 </Grid>
               ))}
@@ -491,13 +531,15 @@ const ComprehensiveJobSearchInterface: React.FC = () => {
           jobs.map((job) => (
             <Grid item xs={12} md={6} lg={4} key={job.id}>
               <JobCard
-                job={job}
-                onBookmark={() => toggleBookmark(job.id)}
+                job={convertAPIJobToJob(job)}
+                onSave={() => toggleBookmark(job.id)}
+                onUnsave={() => toggleBookmark(job.id)}
                 onApply={() => applyToJob(job)}
                 onViewDetails={() => {
                   setSelectedJob(job);
                   setShowJobDetails(true);
                 }}
+                showMatchScore
               />
             </Grid>
           ))

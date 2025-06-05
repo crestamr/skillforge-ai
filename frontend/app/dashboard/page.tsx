@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ImprovedDashboardLayout } from "@/components/layout/improved-dashboard-layout"
+import DashboardLayout from "@/components/layout/DashboardLayout"
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview")
 
   return (
-    <ImprovedDashboardLayout>
+    <DashboardLayout>
       <div className="px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -431,6 +431,6 @@ export default function Dashboard() {
           </div>
         )}
       </div>
-    </ImprovedDashboardLayout>
+    </DashboardLayout>
   )
 }

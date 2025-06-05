@@ -37,19 +37,19 @@ interface LearningPath {
   id: string;
   title: string;
   description: string;
-  provider: string;
+  provider?: string;
   skills: string[];
   estimatedHours: number;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
-  rating: number;
-  enrolledCount: number;
+  rating?: number;
+  enrolledCount?: number;
   progress: number;
   isEnrolled: boolean;
-  isRecommended: boolean;
-  price: number;
-  currency: string;
+  isRecommended?: boolean;
+  price?: number;
+  currency?: string;
   imageUrl?: string;
-  category: string;
+  category?: string;
 }
 
 export default function LearningPage() {
@@ -158,7 +158,8 @@ export default function LearningPage() {
         };
       });
 
-      setLearningPaths(response.data || response);
+      const pathsData = (response as any)?.data || response;
+      setLearningPaths(Array.isArray(pathsData) ? pathsData : []);
     } catch (error: any) {
       console.error('Failed to load learning paths:', error);
       setError(error.message || 'Failed to load learning paths');
@@ -172,7 +173,8 @@ export default function LearningPage() {
       const enrolled = await learningApi.getLearningPaths({ enrolled: true }).catch(() => {
         return { data: learningPaths.filter(p => p.isEnrolled) };
       });
-      setEnrolledPaths(enrolled.data || enrolled);
+      const enrolledData = (enrolled as any)?.data || enrolled;
+      setEnrolledPaths(Array.isArray(enrolledData) ? enrolledData : []);
     } catch (error) {
       console.error('Failed to load enrolled paths:', error);
     }
@@ -181,9 +183,9 @@ export default function LearningPage() {
   const loadRecommendations = async () => {
     try {
       const recommendations = await learningApi.getRecommendations().catch(() => {
-        return learningPaths.filter(p => p.isRecommended);
+        return (learningPaths || []).filter(p => p.isRecommended);
       });
-      setLearningRecommendations(recommendations);
+      setLearningRecommendations(Array.isArray(recommendations) ? recommendations : []);
     } catch (error) {
       console.error('Failed to load recommendations:', error);
     }
@@ -220,7 +222,7 @@ export default function LearningPage() {
   };
 
   const filteredPaths = getFilteredPaths();
-  const categories = Array.from(new Set(learningPaths.map(p => p.category)));
+  const categories = Array.from(new Set(learningPaths.map(p => p.category).filter(Boolean)));
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -466,14 +468,18 @@ const LearningPathCard: React.FC<LearningPathCardProps> = ({ path, onEnroll }) =
                 <Clock className="h-3 w-3 mr-1" />
                 {path.estimatedHours}h
               </span>
-              <span className="flex items-center">
-                <Star className="h-3 w-3 mr-1 text-yellow-500" />
-                {path.rating}
-              </span>
-              <span className="flex items-center">
-                <Users className="h-3 w-3 mr-1" />
-                {path.enrolledCount.toLocaleString()}
-              </span>
+              {path.rating && (
+                <span className="flex items-center">
+                  <Star className="h-3 w-3 mr-1 text-yellow-500" />
+                  {path.rating}
+                </span>
+              )}
+              {path.enrolledCount && (
+                <span className="flex items-center">
+                  <Users className="h-3 w-3 mr-1" />
+                  {path.enrolledCount.toLocaleString()}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -482,9 +488,11 @@ const LearningPathCard: React.FC<LearningPathCardProps> = ({ path, onEnroll }) =
           <Badge className={getDifficultyColor(path.difficulty)}>
             {path.difficulty}
           </Badge>
-          <span className="text-sm font-medium text-gray-900">
-            ${path.price}
-          </span>
+          {path.price && (
+            <span className="text-sm font-medium text-gray-900">
+              ${path.price}
+            </span>
+          )}
         </div>
 
         {/* Skills */}
@@ -537,9 +545,11 @@ const LearningPathCard: React.FC<LearningPathCardProps> = ({ path, onEnroll }) =
           </Button>
         </div>
 
-        <div className="text-xs text-gray-500 mt-2 text-center">
-          by {path.provider}
-        </div>
+        {path.provider && (
+          <div className="text-xs text-gray-500 mt-2 text-center">
+            by {path.provider}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

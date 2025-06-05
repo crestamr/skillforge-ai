@@ -149,8 +149,9 @@ export default function SkillsPage() {
         ];
       });
 
-      setSkills(response);
-      setUserSkills(response);
+      const skillsData = Array.isArray(response) ? response : [];
+      setSkills(skillsData);
+      setUserSkills(skillsData);
 
     } catch (error: any) {
       console.error('Failed to load skills:', error);
@@ -183,7 +184,7 @@ export default function SkillsPage() {
         };
       });
 
-      setSkills(prev => [...prev, newSkill]);
+      setSkills(prev => [...prev, newSkill as Skill]);
       setNewSkillName('');
       setShowAddSkill(false);
     } catch (error) {

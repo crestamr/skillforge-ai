@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ImprovedDashboardLayout } from "@/components/layout/improved-dashboard-layout"
+import DashboardLayout from "@/components/layout/DashboardLayout"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -100,7 +100,7 @@ export default function JobsPage() {
   }
 
   return (
-    <ImprovedDashboardLayout>
+    <DashboardLayout>
       <div className="px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -310,6 +310,6 @@ export default function JobsPage() {
           </div>
         </div>
       </div>
-    </ImprovedDashboardLayout>
+    </DashboardLayout>
   )
 }

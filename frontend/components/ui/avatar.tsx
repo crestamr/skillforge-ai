@@ -2,7 +2,17 @@ import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn, getInitials } from "@/lib/utils"
+import { cn } from "@/lib/utils"
+
+// Helper function to get initials from a name
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+}
 
 const avatarVariants = cva(
   "relative flex shrink-0 overflow-hidden rounded-full",

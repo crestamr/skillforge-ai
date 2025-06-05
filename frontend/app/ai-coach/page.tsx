@@ -149,7 +149,11 @@ export default function AICoachPage() {
             "Help me create a career development plan"
           ]
         };
-      });
+      }) as {
+        response: string;
+        conversationId: string;
+        suggestions: string[];
+      };
 
       const welcomeMessage: Message = {
         id: `msg_${Date.now()}`,
@@ -202,7 +206,10 @@ export default function AICoachPage() {
             "What are the potential challenges?"
           ]
         };
-      });
+      }) as {
+        response: string;
+        suggestions: string[];
+      };
 
       const assistantMessage: Message = {
         id: `msg_${Date.now()}_assistant`,

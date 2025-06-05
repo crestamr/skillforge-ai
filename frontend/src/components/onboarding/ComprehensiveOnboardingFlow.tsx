@@ -3,7 +3,7 @@
  * Multi-step registration and profile setup with resume parsing and skill assessment
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -55,6 +55,8 @@ import { SkillSelector } from '../skills/SkillSelector';
 import { CareerGoalsSelector } from '../career/CareerGoalsSelector';
 import { LinkedInIntegration } from '../integrations/LinkedInIntegration';
 import { GitHubIntegration } from '../integrations/GitHubIntegration';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // Validation schemas for each step
 const personalInfoSchema = z.object({
@@ -109,7 +111,7 @@ interface OnboardingData {
 
 const ComprehensiveOnboardingFlow: React.FC = () => {
   const router = useRouter();
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, token } = useAuth();
   const { showToast } = useToast();
 
   // State management
@@ -207,7 +209,11 @@ const ComprehensiveOnboardingFlow: React.FC = () => {
     setOnboardingData(prev => ({ ...prev, ...stepData }));
     
     // Mark step as completed
-    setCompletedSteps(prev => new Set([...prev, currentStep]));
+    setCompletedSteps(prev => {
+      const newSet = new Set(prev);
+      newSet.add(currentStep);
+      return newSet;
+    });
     
     // Move to next step
     if (currentStep < steps.length - 1) {
@@ -239,7 +245,7 @@ const ComprehensiveOnboardingFlow: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(onboardingData),
       });
@@ -278,7 +284,7 @@ const ComprehensiveOnboardingFlow: React.FC = () => {
       const response = await fetch('/api/v1/ai/parse-resume', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${user?.token}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: formData,
       });
@@ -293,7 +299,7 @@ const ComprehensiveOnboardingFlow: React.FC = () => {
       // Auto-fill form fields from resume
       if (results.personalInfo) {
         Object.entries(results.personalInfo).forEach(([key, value]) => {
-          setValue(key, value);
+          setValue(key as any, value);
         });
       }
       
@@ -476,7 +482,7 @@ const PersonalInfoStep: React.FC<any> = ({ onNext }) => {
             placeholder="John"
           />
           {errors.firstName && (
-            <p className="text-sm text-red-500 mt-1">{errors.firstName.message}</p>
+            <p className="text-sm text-red-500 mt-1">{errors.firstName.message as string}</p>
           )}
         </div>
 
@@ -488,7 +494,7 @@ const PersonalInfoStep: React.FC<any> = ({ onNext }) => {
             placeholder="Doe"
           />
           {errors.lastName && (
-            <p className="text-sm text-red-500 mt-1">{errors.lastName.message}</p>
+            <p className="text-sm text-red-500 mt-1">{errors.lastName.message as string}</p>
           )}
         </div>
       </div>
@@ -501,7 +507,7 @@ const PersonalInfoStep: React.FC<any> = ({ onNext }) => {
           placeholder="San Francisco, CA"
         />
         {errors.location && (
-          <p className="text-sm text-red-500 mt-1">{errors.location.message}</p>
+          <p className="text-sm text-red-500 mt-1">{errors.location.message as string}</p>
         )}
       </div>
 
@@ -514,7 +520,7 @@ const PersonalInfoStep: React.FC<any> = ({ onNext }) => {
           <MenuItem value="America/Los_Angeles">Pacific Time</MenuItem>
         </Select>
         {errors.timezone && (
-          <p className="text-sm text-red-500 mt-1">{errors.timezone.message}</p>
+          <p className="text-sm text-red-500 mt-1">{errors.timezone.message as string}</p>
         )}
       </div>
     </div>
@@ -534,7 +540,7 @@ const ProfessionalInfoStep: React.FC<any> = ({ onNext }) => {
           placeholder="Software Engineer"
         />
         {errors.currentRole && (
-          <p className="text-sm text-red-500 mt-1">{errors.currentRole.message}</p>
+          <p className="text-sm text-red-500 mt-1">{errors.currentRole.message as string}</p>
         )}
       </div>
 
@@ -560,7 +566,7 @@ const ProfessionalInfoStep: React.FC<any> = ({ onNext }) => {
             placeholder="5"
           />
           {errors.yearsExperience && (
-            <p className="text-sm text-red-500 mt-1">{errors.yearsExperience.message}</p>
+            <p className="text-sm text-red-500 mt-1">{errors.yearsExperience.message as string}</p>
           )}
         </div>
 
@@ -575,7 +581,7 @@ const ProfessionalInfoStep: React.FC<any> = ({ onNext }) => {
             <MenuItem value="other">Other</MenuItem>
           </Select>
           {errors.industry && (
-            <p className="text-sm text-red-500 mt-1">{errors.industry.message}</p>
+            <p className="text-sm text-red-500 mt-1">{errors.industry.message as string}</p>
           )}
         </div>
       </div>
@@ -592,7 +598,7 @@ const ProfessionalInfoStep: React.FC<any> = ({ onNext }) => {
           <MenuItem value="self_taught">Self-Taught</MenuItem>
         </Select>
         {errors.educationLevel && (
-          <p className="text-sm text-red-500 mt-1">{errors.educationLevel.message}</p>
+          <p className="text-sm text-red-500 mt-1">{errors.educationLevel.message as string}</p>
         )}
       </div>
     </div>
@@ -747,7 +753,7 @@ const SkillsStep: React.FC<any> = ({ skillSuggestions }) => {
           Suggested Skills
         </Typography>
         <div className="flex flex-wrap gap-2">
-          {suggestedSkills.map((skill) => (
+          {suggestedSkills.map((skill: string) => (
             <Chip
               key={skill}
               label={skill}
@@ -856,7 +862,7 @@ const CareerGoalsStep: React.FC<any> = ({ onNext }) => {
             placeholder="Senior Software Engineer"
           />
           {errors.targetRole && (
-            <p className="text-sm text-red-500 mt-1">{errors.targetRole.message}</p>
+            <p className="text-sm text-red-500 mt-1">{errors.targetRole.message as string}</p>
           )}
         </div>
 
@@ -880,7 +886,7 @@ const CareerGoalsStep: React.FC<any> = ({ onNext }) => {
             <MenuItem value="2_years">2+ years</MenuItem>
           </Select>
           {errors.timeframe && (
-            <p className="text-sm text-red-500 mt-1">{errors.timeframe.message}</p>
+            <p className="text-sm text-red-500 mt-1">{errors.timeframe.message as string}</p>
           )}
         </div>
 
@@ -897,7 +903,7 @@ const CareerGoalsStep: React.FC<any> = ({ onNext }) => {
             placeholder="10"
           />
           {errors.availability && (
-            <p className="text-sm text-red-500 mt-1">{errors.availability.message}</p>
+            <p className="text-sm text-red-500 mt-1">{errors.availability.message as string}</p>
           )}
         </div>
       </div>

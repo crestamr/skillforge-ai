@@ -7,6 +7,7 @@ import { AuthProvider } from '../src/contexts/AuthContext'
 // import { Toaster } from '@/components/ui/sonner'
 import { cn } from '@/lib/utils'
 import { ThemeScript } from '@/components/theme-script'
+import { LayoutFix } from '@/components/layout/LayoutFix'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -91,9 +92,11 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <div className="flex-1">{children}</div>
-          </div>
+          <LayoutFix>
+            <div className="relative flex min-h-screen flex-col">
+              <div className="flex-1">{children}</div>
+            </div>
+          </LayoutFix>
         </AuthProvider>
       </body>
     </html>

@@ -1,14 +1,7 @@
 import * as React from "react"
-
-interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
-  value?: number
-  max?: number
-  className?: string
-}
-
-const cn = (...classes: (string | undefined)[]) => {
-  return classes.filter(Boolean).join(' ')
-}
+import * as ProgressPrimitive from "@radix-ui/react-progress"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/lib/utils"
 
 const progressVariants = cva(
   "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
@@ -58,7 +51,8 @@ const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   ProgressProps
 >(({ className, value = 0, size, variant = "default", showValue = false, label, formatValue, ...props }, ref) => {
-  const displayValue = formatValue ? formatValue(value) : `${Math.round(value)}%`
+  const safeValue = value ?? 0
+  const displayValue = formatValue ? formatValue(safeValue) : `${Math.round(safeValue)}%`
   
   return (
     <div className="space-y-2">
@@ -79,7 +73,7 @@ const Progress = React.forwardRef<
       >
         <ProgressPrimitive.Indicator
           className={cn(progressIndicatorVariants({ variant }))}
-          style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+          style={{ transform: `translateX(-${100 - safeValue}%)` }}
         />
       </ProgressPrimitive.Root>
     </div>
