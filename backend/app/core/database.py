@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import QueuePool
-from motor.motor_asyncio import AsyncIOMotorClient
+# from motor.motor_asyncio import AsyncIOMotorClient  # TODO: Fix motor dependency installation
 from redis import Redis
 from typing import Generator, Optional
 import logging
@@ -85,24 +85,25 @@ class MongoDB:
     """MongoDB connection manager"""
     
     def __init__(self):
-        self.client: Optional[AsyncIOMotorClient] = None
+        self.client = None  # Optional[AsyncIOMotorClient] = None  # TODO: Fix motor dependency
         self.database = None
     
     async def connect(self):
         """Connect to MongoDB"""
         try:
-            self.client = AsyncIOMotorClient(settings.MONGODB_URL)
+            # TODO: Fix motor dependency installation
+            # self.client = AsyncIOMotorClient(settings.MONGODB_URL)
             # Test connection
-            await self.client.admin.command('ping')
-            
+            # await self.client.admin.command('ping')
+
             # Get database name from URL
-            db_name = settings.MONGODB_URL.split('/')[-1]
-            if '?' in db_name:
-                db_name = db_name.split('?')[0]
-            
-            self.database = self.client[db_name]
-            logger.info(f"Connected to MongoDB database: {db_name}")
-            
+            # db_name = settings.MONGODB_URL.split('/')[-1]
+            # if '?' in db_name:
+            #     db_name = db_name.split('?')[0]
+
+            # self.database = self.client[db_name]
+            logger.info("MongoDB connection temporarily disabled - motor dependency issue")
+
         except Exception as e:
             logger.error(f"Error connecting to MongoDB: {e}")
             raise

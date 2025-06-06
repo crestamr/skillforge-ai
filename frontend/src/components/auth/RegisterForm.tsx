@@ -67,10 +67,15 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     handleSubmit,
     formState: { errors, isValid },
     watch,
+    setValue,
     reset,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     mode: 'onChange',
+    defaultValues: {
+      agreeToTerms: false,
+      marketingEmails: false,
+    },
   });
 
   const password = watch('password', '');
@@ -327,7 +332,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             <div className="flex items-start space-x-2">
               <Checkbox
                 id="agreeToTerms"
-                {...register('agreeToTerms')}
+                checked={watch('agreeToTerms')}
+                onCheckedChange={(checked) => setValue('agreeToTerms', checked as boolean)}
                 className={errors.agreeToTerms ? 'border-red-500' : ''}
               />
               <Label htmlFor="agreeToTerms" className="text-sm leading-5">
@@ -348,7 +354,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             <div className="flex items-start space-x-2">
               <Checkbox
                 id="marketingEmails"
-                {...register('marketingEmails')}
+                checked={watch('marketingEmails')}
+                onCheckedChange={(checked) => setValue('marketingEmails', checked as boolean)}
               />
               <Label htmlFor="marketingEmails" className="text-sm leading-5">
                 I'd like to receive marketing emails about SkillForge AI updates and features

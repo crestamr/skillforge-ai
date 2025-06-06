@@ -22,7 +22,6 @@ import redis.asyncio as redis
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlAlchemyIntegration
 
 from app.core.config import settings
 from app.core.database import engine, get_db
@@ -42,7 +41,6 @@ if hasattr(settings, 'SENTRY_DSN') and settings.SENTRY_DSN:
         dsn=settings.SENTRY_DSN,
         integrations=[
             FastApiIntegration(auto_enabling=True),
-            SqlAlchemyIntegration(),
         ],
         traces_sample_rate=0.1,
         environment=getattr(settings, 'ENVIRONMENT', 'development'),

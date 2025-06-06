@@ -4,12 +4,12 @@ services:
   # ================================
   frontend:
     build:
-      context: ./frontend
+      context: ../../frontend
       dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
+      - ../../frontend:/app
       - /app/node_modules
       - /app/.next
     environment:
@@ -36,12 +36,12 @@ services:
   # ================================
   backend:
     build:
-      context: ./backend
+      context: ../../backend
       dockerfile: Dockerfile.dev
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
+      - ../../backend:/app
     environment:
       - ENVIRONMENT=development
       - DATABASE_URL=postgresql://skillforge_user:skillforge_pass@postgres:5432/skillforge_db
@@ -78,12 +78,12 @@ services:
   # ================================
   ai-services:
     build:
-      context: ./ai-services
+      context: ../../ai-services
       dockerfile: Dockerfile.dev
     ports:
       - "8001:8001"
     volumes:
-      - ./ai-services:/app
+      - ../../ai-services:/app
       - ai-models-cache:/app/models
     environment:
       - ENVIRONMENT=development
@@ -123,7 +123,7 @@ services:
       - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infrastructure/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../../infrastructure/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - skillforge-network
     restart: unless-stopped
@@ -146,7 +146,7 @@ services:
       - MONGO_INITDB_DATABASE=skillforge_db
     volumes:
       - mongo_data:/data/db
-      - ./infrastructure/docker/mongo/init.js:/docker-entrypoint-initdb.d/init.js
+      - ../../infrastructure/docker/mongo/init.js:/docker-entrypoint-initdb.d/init.js
     networks:
       - skillforge-network
     restart: unless-stopped
@@ -180,11 +180,11 @@ services:
   # ================================
   celery-worker:
     build:
-      context: ./backend
+      context: ../../backend
       dockerfile: Dockerfile.dev
     command: celery -A app.core.celery_app worker --loglevel=info --concurrency=4
     volumes:
-      - ./backend:/app
+      - ../../backend:/app
     environment:
       - ENVIRONMENT=development
       - DATABASE_URL=postgresql://skillforge_user:skillforge_pass@postgres:5432/skillforge_db
@@ -209,11 +209,11 @@ services:
   # ================================
   celery-beat:
     build:
-      context: ./backend
+      context: ../../backend
       dockerfile: Dockerfile.dev
     command: celery -A app.core.celery_app beat --loglevel=info
     volumes:
-      - ./backend:/app
+      - ../../backend:/app
       - celery_beat_data:/app/celerybeat-schedule
     environment:
       - ENVIRONMENT=development
@@ -236,7 +236,7 @@ services:
   # ================================
   flower:
     build:
-      context: ./backend
+      context: ../../backend
       dockerfile: Dockerfile.dev
     command: celery -A app.core.celery_app flower --port=5555
     ports:
@@ -284,8 +284,8 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./infrastructure/docker/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./infrastructure/docker/nginx/conf.d:/etc/nginx/conf.d
+      - ../../infrastructure/docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ../../infrastructure/docker/nginx/conf.d:/etc/nginx/conf.d
     depends_on:
       - frontend
       - backend
